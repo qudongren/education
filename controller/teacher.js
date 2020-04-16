@@ -46,13 +46,16 @@ class Teacher {
   async login(req, res, next) {
     var id = req.body.id;
     var password = req.body.password;
-    let sql = `select password,isAdmin from teacher where id = ${id}`;
+    let sql = `select * from teacher where id = ${id}`;
     let result = await querysql(sql);
     if (result.length) {
-      let item = result[0]
+      let item = result[0];
+      let newItem = JSON.parse(JSON.stringify(item));
+      delete newItem.password
+      delete newItem.isAdmin
       if (item.password === password) {
         let token = pcjwt.createToken(id, item.isAdmin);
-        res.send({ status: 200, msg: '登陆成功', token, role: item.isAdmin});
+        res.send({ status: 200, msg: '登陆成功', token, role: item.isAdmin, ...newItem});
       } else {
         res.send({ status: 400, msg: '账号密码错误' });
       }
