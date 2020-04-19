@@ -29,5 +29,22 @@ router.post('/deleteSubCourse', Teacher.deleteSubCourse);
 
 router.get('/getWorkList', Teacher.getWorkList);
 
+router.post('/addTeacher', Teacher.addTeacher);
+
+router.post('/deleteTeacher', Teacher.deleteTeacher);
+
+router.post('/changeTeacher', Teacher.changeTeacher);
+
+router.get('/getCourseOfTeacher', Teacher.getCourseOfTeacher);
+
+router.get('/searchTeacher', Teacher.searchTeacher);
+
+router.post('/changePassword', Teacher.changePassword);
+
+router.post('/changeOwn', Teacher.changeOwn);
+
+router.get('/getAllStudent', Teacher.getAllStudent);
+
+router.post('/changeStudent', Teacher.changeStudent);
 
 module.exports = router;

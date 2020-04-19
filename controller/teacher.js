@@ -175,10 +175,130 @@ class Teacher {
   async searchCourse(req, res, next) {
     let {search = ''} = req.query;
     try {
-      let res0 = await querysql(`select * from course where cName like '%${search}%'`);
+      let res0 = await querysql(`select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+      from course a, category b, category c, teacher d 
+      where a.cate_id = b.id and 
+      b.parent_id = c.id and 
+      a.teacher_id = d.id and
+      a.cName like '%${search}%'`);
       res.send(res0);
     } catch (e) {
       res.send({err: e})
+    }
+  }
+  async addTeacher(req, res, next) {
+    let {name, phone, gender, password, introduce, tags} = req.body;
+    if (!name || !password) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    try {
+      let sql = `insert into teacher (name, phone, gender, password, introduce, tags) values (?, ?, ?, ?, ?, ?)`;
+      await querysql(sql, [name, phone, gender, password, introduce, tags]);
+      res.send({code: 1, msg: '添加成功'})
+    } catch (e) {
+      res.send({code: -1, msg: '添加失败'})
+    }
+  }
+  async deleteTeacher(req, res, next) {
+    let {teacher_id} = req.body;
+    if (!teacher_id) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    try {
+      await querysql(`delete from teacher where id = ${teacher_id}`);
+      res.send({code: 1, msg: '删除成功'})
+    } catch (e) {
+      res.send({code: -1, msg: '删除失败'})
+    }
+  }
+  async changeTeacher(req, res, next) {
+    let {name, phone, gender, introduce, password, tags, teacher_id} = req.body;
+    if (!name || !teacher_id || !password) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    try {
+      let sql = `update teacher set name = ?, phone = ?, gender = ?, introduce = ?, password = ?, tags = ? where id = ?`;
+      await querysql(sql, [name, phone, gender, introduce, password, tags, teacher_id]);
+      res.send({code: 1, msg: '更改成功'})
+    } catch (e) {
+      res.send({code: -1, msg: '更改失败'})
+    }
+  }
+  async getCourseOfTeacher(req, res, next) {
+    let {teacher_id} = req.query;
+    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    from course a, category b, category c, teacher d 
+    where a.cate_id = b.id and 
+    b.parent_id = c.id and 
+    a.teacher_id = d.id and
+    d.id = ${teacher_id}`
+    let courses = await querysql(sql);
+    res.send(courses);
+  }
+  async searchTeacher(req, res, next) {
+    let {search = ''} = req.query;
+    try {
+      let res0 = await querysql(`select * from teacher where name like '%${search}%'`);
+      res.send(res0);
+    } catch (e) {
+      res.send({err: e})
+    }
+  }
+  async changePassword(req, res, next) {
+    let token = req.headers.token;
+    let result = pcjwt.verifyToken(token);
+    let {oldWord, password} = req.body;
+    if (!oldWord || !password) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    try {
+      let teacher_id = result.id;
+      let res0 = await querysql(`select password from teacher where id = ${teacher_id}`);
+      if (oldWord !== res0[0].password) {
+        res.send({code: -1, msg: '密码错误'});
+        return;
+      } else {
+        await querysql(`update teacher set password = ${password} where id = ${teacher_id}`);
+        res.send({code: 1, msg: '更改成功'})
+      }
+    } catch (e) {
+      res.send({code: -1, msg: '更改失败'})
+    }
+  }
+  async changeOwn(req, res, next) {
+    let token = req.headers.token;
+    let result = pcjwt.verifyToken(token);
+    let {name, phone, gender, introduce, tags} = req.body;
+    if (!name) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    let teacher_id = result.id;
+    try {
+      let sql = `update teacher set name = ?, phone = ?, gender = ?, introduce = ?, tags = ? where id = ?`;
+      await querysql(sql, [name, phone, gender, introduce, tags, teacher_id]);
+      res.send({code: 1, msg: '更改成功'})
+    } catch (e) {
+      res.send({code: -1, msg: '更改失败'})
+    }
+  }
+  async getAllStudent(req, res, next) {
+    let sql = `select student.id, student.name, student.gender, student.phone, student.birthday, student.avatarUrl from student`;
+    let studentList = await querysql(sql);
+    res.send(studentList);
+  }
+  async changeStudent(req, res, next) {
+    let {name, gender, phone, birthday, student_id} = req.body;
+    try {
+      let sql = `update student set name = ?, gender = ?, phone = ?, birthday = ? where id = ?`;
+      await querysql(sql, [name, gender, phone, birthday, student_id]);
+      res.send({code: 1, msg: '更改成功'})
+    } catch (e) {
+      res.send({code: -1, msg: '更改失败'})
     }
   }
 }
