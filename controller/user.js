@@ -44,7 +44,7 @@ class User {
     if (!teacher_id) {
       res.send({ code: -1 })
     }
-    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 
@@ -64,7 +64,7 @@ class User {
     if (!subject_id) {
       res.send({ code: -1 })
     }
-    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 
@@ -84,7 +84,7 @@ class User {
     if (!search) {
       res.send({ code: -1 })
     }
-    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 
@@ -105,7 +105,7 @@ class User {
     if (!grade_id) {
       res.send({ code: -1 })
     }
-    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 
@@ -136,7 +136,7 @@ class User {
     if (!course_id) {
       res.send({ code: -1 })
     }
-    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 
@@ -177,7 +177,7 @@ class User {
     if (!course_list || !course_list.length) {
       res.send({ code: -1 })
     }
-    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 
@@ -289,7 +289,7 @@ class User {
       return;
     }
     let courseIdList = res0.map(item => item.course_id);
-    let courseList = await querysql(`select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let courseList = await querysql(`select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 

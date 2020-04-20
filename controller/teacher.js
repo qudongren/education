@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const request = require('request');
 const querysql = require('../config/db');
+const { filterCourse, getTimeBlock, randomOrder, justifyQuery } = require('../utils/util');
 
 class Teacher {
   constructor() {
@@ -35,7 +36,7 @@ class Teacher {
   async getCourseList(req, res, next) {
     let token = req.headers.token;
     let result = pcjwt.verifyToken(token);
-    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 
@@ -175,7 +176,7 @@ class Teacher {
   async searchCourse(req, res, next) {
     let {search = ''} = req.query;
     try {
-      let res0 = await querysql(`select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+      let res0 = await querysql(`select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
       from course a, category b, category c, teacher d 
       where a.cate_id = b.id and 
       b.parent_id = c.id and 
@@ -229,7 +230,7 @@ class Teacher {
   }
   async getCourseOfTeacher(req, res, next) {
     let {teacher_id} = req.query;
-    let sql = `select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
     from course a, category b, category c, teacher d 
     where a.cate_id = b.id and 
     b.parent_id = c.id and 
@@ -293,12 +294,56 @@ class Teacher {
   }
   async changeStudent(req, res, next) {
     let {name, gender, phone, birthday, student_id} = req.body;
+    if (!student_id) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
     try {
       let sql = `update student set name = ?, gender = ?, phone = ?, birthday = ? where id = ?`;
       await querysql(sql, [name, gender, phone, birthday, student_id]);
       res.send({code: 1, msg: '更改成功'})
     } catch (e) {
       res.send({code: -1, msg: '更改失败'})
+    }
+  }
+
+  async addCate(req, res, next) {
+    let {cate_dec, parent_id} = req.body;
+    if (!justifyQuery(cate_dec, parent_id)) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    try {
+      await querysql(`insert into category (cate_dec, parent_id) values (?, ?)`, [cate_dec, parent_id]);
+      res.send({code: 1, msg: '添加成功'});
+    } catch (e) {
+      res.send({code: -1, msg: '添加失败'});
+    }
+  }
+  async delCate(req, res, next) {
+    let {id} = req.body;
+    if (!justifyQuery(id)) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    try {
+      await querysql(`delete from category where id = ${id}`);
+      res.send({code: 1, msg: '删除成功'});
+    } catch (e) {
+      res.send({code: -1, msg: '删除失败'});
+    }
+  }
+  async changeCate(req, res, next) {
+    let {id, cate_dec} = req.body;
+    if (!justifyQuery(id, cate_dec)) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    try {
+      await querysql(`update category set cate_dec = ? where id = ?`, [cate_dec, id]);
+      res.send({code: 1, msg: '修改成功'});
+    } catch (e) {
+      res.send({code: -1, msg: '修改失败'});
     }
   }
 }

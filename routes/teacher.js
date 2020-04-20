@@ -47,4 +47,11 @@ router.get('/getAllStudent', Teacher.getAllStudent);
 
 router.post('/changeStudent', Teacher.changeStudent);
 
+router.post('/addCate', Teacher.addCate);
+
+router.post('/delCate', Teacher.delCate);
+
+router.post('/changeCate', Teacher.changeCate);
+
+
 module.exports = router;
