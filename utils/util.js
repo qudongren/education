@@ -32,6 +32,7 @@ async function getTimeBlock(courses) {
     start = start.replace(/-/g,"\/");
     end = end.replace(/-/g,"\/");
     let newItem = JSON.parse(JSON.stringify(courses[i]));
+    newItem.time = newItem.start_time.slice(0, 5) + '-' + newItem.end_time.slice(0, 5);
     newItem.sub_course = sub_course;
     newCourses.push(Object.assign(newItem, {course_date: start + '-' + end, sub_course_times}));
   }
