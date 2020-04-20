@@ -7,6 +7,7 @@ const querysql = require('../config/db');
 router.get('/', async function(req, res, next) {
   let sql = `select * from category`;
   let categories = await querysql(sql);
+  categories = categories.map(v => {return {id: v.id, dec: v.cate_dec, parent_id: v.parent_id}})
   res.send(categories);
 })
 

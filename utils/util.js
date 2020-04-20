@@ -49,4 +49,14 @@ function randomOrder(j) {
   return random_no.toString();
 };
 
-module.exports = {filterCourse, getTimeBlock, randomOrder};
+function justifyQuery() {
+  let arr = [...arguments], isNull = true;
+  arr.forEach(element => {
+    if (!element && element !== 0) {
+      isNull = false;
+    }
+  });
+  return isNull;
+}
+
+module.exports = {filterCourse, getTimeBlock, randomOrder, justifyQuery};
