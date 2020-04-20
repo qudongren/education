@@ -11,7 +11,7 @@ router.get('/courseList', Teacher.getCourseList);
 
 router.get('/subCourse', Teacher.getSubCourse);
 
-router.get('/studentList', Teacher.getStudentList);
+router.get('/studentList', Teacher.getStudentByCourse);
 
 router.post('/changeCourse', Teacher.changeCourse);
 
@@ -47,11 +47,12 @@ router.get('/getAllStudent', Teacher.getAllStudent);
 
 router.post('/changeStudent', Teacher.changeStudent);
 
+router.post('/deleteStudent', Teacher.deleteStudent);
+
 router.post('/addCate', Teacher.addCate);
 
 router.post('/delCate', Teacher.delCate);
 
 router.post('/changeCate', Teacher.changeCate);
-
 
 module.exports = router;
