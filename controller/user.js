@@ -250,16 +250,11 @@ class User {
   async changeUserInfo(req, res, next) {
     let token = req.headers.token;
     let result = jwt.verifyToken(token);
-    let params = req.body;
-    let str = '';
-    for (let key in params) {
-      str += key + '=' + params[key];
-      str += ','
-    }
-    str = str.slice(0, str.length - 1)
-    let sql = `update student set ${str} where id = ${result}`;
-    await querysql(sql);
-    res.send({ code: 1 })
+    let {name, birthday, gender, phone} = req.body;
+    let sql = `update student set name = ?, birthday = ?, gender = ?, phone = ? where id = ${result}`;
+    await querysql(sql, [name, birthday, gender, parseInt(phone)]);
+    let res0 = await querysql(`select * from student where id = ${result}`);
+    res.send({ code: 1, name: res0[0].name })
   }
   async cancelCourse(req, res, next) {
     let token = req.headers.token;
@@ -294,7 +289,13 @@ class User {
       return;
     }
     let courseIdList = res0.map(item => item.course_id);
-    let courseList = await querysql(`select * from course where id in (${courseIdList.toString()})`);
+    let courseList = await querysql(`select a.*, b.dec as subject_dec, c.dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    from course a, category b, category c, teacher d 
+    where a.cate_id = b.id and 
+    b.parent_id = c.id and 
+    a.teacher_id = d.id and
+    a.id in (${courseIdList.toString()})`);
+    courseList = await getTimeBlock(courseList);
     let res1 = await querysql(`select b.*, c.cName from subcourse b, course c
     where c.id in (${courseIdList.toString()}) and
     b.course_id = c.id and
@@ -306,8 +307,8 @@ class User {
       })
       return;
     }
+    res1 = res1.filter(item => !!item.sub_work);
     for (let i = 0, len = res1.length; i < len; i++) {
-      console.log(result, res1[i].id);
       let res2 = await querysql(`select * from work where student_id = ${result} and subcourse_id = ${res1[i].id}`)
       if (res2.length) {
         res1[i].isFinish = true;
@@ -328,15 +329,17 @@ class User {
     form.uploadDir = uploadDir;//本地文件夹目录路径
     form.parse(req, (err, fields, files) => {
       let { fileName, id } = fields;
+      console.log(fields);
       let oldPath = files.file.path;//这里的路径是图片的本地路径
       let newPath = path.join(path.dirname(oldPath), fileName);
       var downUrl = "http://localhost:3000/" + fileName;//这里是想传回图片的链接
+      console.log(downUrl)
       fs.rename(oldPath, newPath, async () => {//fs.rename重命名图片名称
         try {
-          await querysql(`insert into work (student_id, subcourse_id, workUrl) values (${result}, ${id}, ${downUrl})`);
+          await querysql(`insert into work (student_id, subcourse_id, worlUrl) values (${result}, ${id}, '${downUrl}')`);
           res.send({ code: 1, msg: "上传成功" });
         } catch (e) {
-          res.send({ code: -1, msg: "上传失败" });
+          res.send({ code: -1, msg: "上传失败", err: e});
         }
       });
     });
