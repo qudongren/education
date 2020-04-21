@@ -1,6 +1,6 @@
 const wxConfig = require('../config/wxConfig.json');
 const jwt = require("../utils/jwt");
-const { filterCourse, getTimeBlock, randomOrder } = require('../utils/util');
+const { filterCourse, getTimeBlock, randomOrder, justifyQuery } = require('../utils/util');
 const formidable = require("formidable");
 const path = require("path");
 const fs = require("fs");
@@ -23,13 +23,14 @@ class User {
           let sql = 'select * from Student where openid = ?'
           let student = await querysql(sql, [data.openid]);
           if (!student.length) {
-            let sql_1 = 'insert into Student (openid) values (?)';
-            let result = await querysql(sql_1, [data.openid]);
+            let {name, avatarUrl, gender} = req.body;
+            let sql_1 = 'insert into Student (openid, name, avatarUrl, gender) values (?, ?, ?, ?)';
+            let result = await querysql(sql_1, [data.openid, name, avatarUrl, gender]);
             let token = jwt.createToken(req.body.code, result.insertId, data.session_key);
-            res.send({ token, code: 1 });
+            res.send({ token, code: 1, name, avatarUrl, gender });
           } else {
             let token = jwt.createToken(req.body.code, student[0].id, data.session_key);
-            res.send({ token, code: 1, name: student[0].name });
+            res.send({ token, code: 1, name: student[0].name, avatarUrl: student[0].avatarUrl, gender: student[0].gender });
           }
         } catch (e) {
           res.send({ code: -2, err: e });
@@ -252,7 +253,7 @@ class User {
     let result = jwt.verifyToken(token);
     let {name, birthday, gender, phone} = req.body;
     let sql = `update student set name = ?, birthday = ?, gender = ?, phone = ? where id = ${result}`;
-    await querysql(sql, [name, birthday, gender, parseInt(phone)]);
+    await querysql(sql, [name, birthday, gender, phone]);
     let res0 = await querysql(`select * from student where id = ${result}`);
     res.send({ code: 1, name: res0[0].name })
   }
@@ -333,16 +334,65 @@ class User {
       let oldPath = files.file.path;//这里的路径是图片的本地路径
       let newPath = path.join(path.dirname(oldPath), fileName);
       var downUrl = "http://localhost:3000/" + fileName;//这里是想传回图片的链接
-      console.log(downUrl)
+      let handle_time = new Date();
       fs.rename(oldPath, newPath, async () => {//fs.rename重命名图片名称
         try {
-          await querysql(`insert into work (student_id, subcourse_id, worlUrl) values (${result}, ${id}, '${downUrl}')`);
+          await querysql(`insert into work (student_id, subcourse_id, worlUrl, handle_time) values (?, ?, ?, ?)`, [result, id, downUrl, handle_time]);
           res.send({ code: 1, msg: "上传成功" });
         } catch (e) {
           res.send({ code: -1, msg: "上传失败", err: e});
         }
       });
     });
+  }
+  async addComment(req, res, next) {
+    let token = req.headers.token;
+    let result = jwt.verifyToken(token);
+    let {teacher_id, content} = req.body;
+    console.log(result, teacher_id, content);
+    if (!justifyQuery(result, teacher_id, content)) {
+      res.send({code: -2});
+      return;
+    }
+    let created_time = new Date();
+    try {
+      await querysql(`insert into comment (student_id, teacher_id, created_time, content) values (?, ?, ?, ?)`, [result, teacher_id, created_time, content]);
+      res.send({code: 1})
+    } catch (e) {
+      res.send({code: -1})
+    }
+  }
+  async getSelectedCourseDetail(req, res, next) {
+    let token = req.headers.token;
+    let result = jwt.verifyToken(token);
+    let { course_id } = req.query;
+    if (!justifyQuery(course_id)) {
+      res.send({ code: -1 })
+    }
+    let sql = `select a.*, b.cate_dec as subject_dec, c.cate_dec as grade_dec, d.name as teacher_name, d.avatarUrl 
+    from course a, category b, category c, teacher d 
+    where a.cate_id = b.id and 
+    b.parent_id = c.id and 
+    a.teacher_id = d.id and
+    a.id = ?`
+    let courses = await querysql(sql, [course_id]);
+    if (!courses.length) {
+      res.send([]);
+      return;
+    }
+    courses = await getTimeBlock(courses);
+    let sub_course = courses[0].sub_course;
+    for (let i = 0, len = sub_course.length; i < len; i++) {
+      if (!sub_course[i].sub_work) continue;
+      let res2 = await querysql(`select * from work where student_id = ${result} and subcourse_id = ${sub_course[i].id}`)
+      if (res2.length) {
+        sub_course[i].isFinish = true;
+      } else {
+        sub_course[i].isFinish = false;
+      }
+    }
+    console.log(courses[0].sub_course);
+    res.send(courses);
   }
 }
 

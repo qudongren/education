@@ -19,6 +19,7 @@ module.exports = function (sql, options) {
       if (options) {
         connection.query(sql, options, function (err, results, fields) {
           if (err) {
+            console.log(err);
             reject(err);
           } else {
             resolve(results);
@@ -27,6 +28,7 @@ module.exports = function (sql, options) {
       } else {
         connection.query(sql, function (err, results, fields) {
           if (err) {
+            console.log(err);
             reject(err);
           } else {
             resolve(results);

@@ -4,6 +4,14 @@ var router = express.Router();
 mongoose.set('useFindAndModify', false)
 const User = require('../controller/user');
 
+
+
+//评价接口
+router.post("/addComment", User.addComment);
+
+// 获取选课课程详情
+router.get("/selectDetail", User.getSelectedCourseDetail);
+
 // 上传作业
 router.post("/upload", User.upload);
 
