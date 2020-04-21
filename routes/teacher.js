@@ -39,6 +39,8 @@ router.get('/getCourseOfTeacher', Teacher.getCourseOfTeacher);
 
 router.get('/searchTeacher', Teacher.searchTeacher);
 
+router.post('/changePasswordByAdmin', Teacher.changePasswordByAdmin);
+
 router.post('/changePassword', Teacher.changePassword);
 
 router.post('/changeOwn', Teacher.changeOwn);

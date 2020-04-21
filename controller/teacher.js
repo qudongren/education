@@ -189,12 +189,14 @@ class Teacher {
       res.send({err: e})
     }
   }
+
   async addTeacher(req, res, next) {
-    let {name, phone, gender, password, introduce, tags} = req.body;
-    if (!justifyQuery(name, password)) {
+    let {name, phone, gender, introduce, tags} = req.body;
+    if (!justifyQuery(name)) {
       res.send({ code: -2, msg: "缺少参数" });
       return;
     }
+    let password = "123456";
     try {
       let sql = `insert into teacher (name, phone, gender, password, introduce, tags) values (?, ?, ?, ?, ?, ?)`;
       await querysql(sql, [name, phone, gender, password, introduce, tags]);
@@ -217,14 +219,14 @@ class Teacher {
     }
   }
   async changeTeacher(req, res, next) {
-    let {name, phone, gender, introduce, password, tags, teacher_id} = req.body;
-    if (!justifyQuery(name, teacher_id, password)) {
+    let {name, phone, gender, introduce, tags, teacher_id} = req.body;
+    if (!justifyQuery(name, teacher_id)) {
       res.send({ code: -2, msg: "缺少参数" });
       return;
     }
     try {
-      let sql = `update teacher set name = ?, phone = ?, gender = ?, introduce = ?, password = ?, tags = ? where id = ?`;
-      await querysql(sql, [name, phone, gender, introduce, password, tags, teacher_id]);
+      let sql = `update teacher set name = ?, phone = ?, gender = ?, introduce = ?, tags = ? where id = ?`;
+      await querysql(sql, [name, phone, gender, introduce, tags, teacher_id]);
       res.send({code: 1, msg: '更改成功'})
     } catch (e) {
       res.send({code: -1, msg: '更改失败'})
@@ -254,6 +256,20 @@ class Teacher {
       res.send({err: e})
     }
   }
+  async changePasswordByAdmin(req, res, next) {
+    let {password, teacher_id} = req.body;
+    if (!justifyQuery(password, teacher_id)) {
+      res.send({ code: -2, msg: "缺少参数" });
+      return;
+    }
+    try {
+      await querysql(`update teacher set password = ${password} where id = ${teacher_id}`);
+      res.send({code: 1, msg: '更改成功'})
+    } catch (e) {
+      res.send({code: -1, msg: '更改失败'})
+    }
+  }
+
   async changePassword(req, res, next) {
     let token = req.headers.token;
     let result = pcjwt.verifyToken(token);
@@ -293,6 +309,7 @@ class Teacher {
       res.send({code: -1, msg: '更改失败'})
     }
   }
+
   async getAllStudent(req, res, next) {
     let sql = `select student.id, student.name, student.gender, student.phone, student.birthday, student.avatarUrl from student`;
     let studentList = await querysql(sql);
